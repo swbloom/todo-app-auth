@@ -12,6 +12,8 @@ var config = {
  };
  firebase.initializeApp(config);
 
+const auth = firebase.auth();
+const authProvider = new firebase.auth.GoogleAuthProvider();
 const dbRef = firebase.database().ref('/');
 
 // 3. Create input and button inside of our App component so that user can type in their todo
@@ -20,16 +22,38 @@ class App extends React.Component {
 		super();
 		this.state = {
 			currentTodo: '',
-			todos: []
+			todos: [],
+			loggedIn: false
 		}
 		this.handleChange = this.handleChange.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
+		this.login = this.login.bind(this);
+		this.logout = this.logout.bind(this);
 	}
 	handleSubmit(e) {
 		e.preventDefault();
 		dbRef.push(this.state.currentTodo);
 		this.setState({
 			currentTodo: '',
+		});
+	}
+	login() {
+		auth.signInWithPopup(authProvider)
+			.then((result) => {
+				var user = result.user;
+				this.setState({
+					loggedIn: true,
+					user: user
+				});			
+			}).catch(function(error) {
+			});
+	}
+	logout() {
+		auth.signOut().then(() => {
+			this.setState({
+				loggedIn: false,
+				user: {}
+			})
 		});
 	}
 	handleChange(e) {
@@ -45,18 +69,27 @@ class App extends React.Component {
 		return (
 			<main>
 				<h1>Todo App</h1>
-				<form onSubmit={this.handleSubmit}>
-					<input name="currentTodo" value={this.state.currentTodo} onChange={this.handleChange} type="text" placeholder="Enter your todo" />
-					<input type="submit" value="Add Todo" />
-				</form>
-				<ul>
-					{this.state.todos.map((todo) => {
-						return (<li key={todo.key}>
-							{todo.description}
-							<button onClick={() => this.removeTodo(todo.key)}>🙅</button>
-						</li>)	
-					})}
-				</ul>
+				{this.state.loggedIn === false ?
+				<button onClick={this.login}>Log In</button>
+				:
+				<button onClick={this.logout}>Log Out</button>
+				}
+				{this.state.loggedIn === true ?
+				<div>
+					<form onSubmit={this.handleSubmit}>
+						<input name="currentTodo" value={this.state.currentTodo} onChange={this.handleChange} type="text" placeholder="Enter your todo" />
+						<input type="submit" value="Add Todo" />
+					</form>
+					<ul>
+						{this.state.todos.map((todo) => {
+							return (<li key={todo.key}>
+								{todo.description}
+								<button onClick={() => this.removeTodo(todo.key)}>🙅</button>
+							</li>)	
+						})}
+					</ul>
+				</div>
+				: <p>You must be logged in to see or add todos.</p>}
 			</main>
 		)
 	}
