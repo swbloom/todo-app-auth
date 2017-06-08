@@ -14,7 +14,6 @@ var config = {
 
 const auth = firebase.auth();
 const authProvider = new firebase.auth.GoogleAuthProvider();
-const dbRef = firebase.database().ref('/');
 
 // 3. Create input and button inside of our App component so that user can type in their todo
 class App extends React.Component {
@@ -32,7 +31,9 @@ class App extends React.Component {
 	}
 	handleSubmit(e) {
 		e.preventDefault();
-		dbRef.push(this.state.currentTodo);
+		const userId = this.state.user.uid;
+		const userTodos = firebase.database().ref(`/${userId}`);		
+		userTodos.push(this.state.currentTodo);
 		this.setState({
 			currentTodo: '',
 		});
@@ -99,26 +100,29 @@ class App extends React.Component {
 	componentDidMount() {
 		auth.onAuthStateChanged((user) => {
 			if (user) {
+				let userId = user.uid;
 				this.setState({
-					loggedIn: true
+					loggedIn: true,
+					user: user
+				});
+				const userRef = firebase.database().ref(`/${userId}`);
+				userRef.on('value', (snapshot) => {
+					const dbTodos = snapshot.val();
+					const newTodos = [];
+					for (let key in dbTodos) {
+						// console.log('key', key);
+						// console.log('todos', dbTodos[key]);
+						newTodos.push({
+							key: key,
+							description: dbTodos[key] 
+						});
+					}
+					// console.log(newTodos);
+					this.setState({
+						todos: newTodos
+					});
 				});
 			}
-		});
-		dbRef.on('value', (snapshot) => {
-			const dbTodos = snapshot.val();
-			const newTodos = [];
-			for (let key in dbTodos) {
-				// console.log('key', key);
-				// console.log('todos', dbTodos[key]);
-				newTodos.push({
-					key: key,
-					description: dbTodos[key] 
-				});
-			}
-			// console.log(newTodos);
-			this.setState({
-				todos: newTodos
-			});
 		});
 	}
 }
