@@ -94,6 +94,13 @@ class App extends React.Component {
 		)
 	}
 	componentDidMount() {
+		auth.onAuthStateChanged((user) => {
+			if (user) {
+				this.setState({
+					loggedIn: true
+				});
+			}
+		});
 		dbRef.on('value', (snapshot) => {
 			const dbTodos = snapshot.val();
 			const newTodos = [];
