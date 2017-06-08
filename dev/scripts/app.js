@@ -45,7 +45,6 @@ class App extends React.Component {
 					loggedIn: true,
 					user: user
 				});			
-			}).catch(function(error) {
 			});
 	}
 	logout() {
@@ -66,16 +65,10 @@ class App extends React.Component {
 		todoRef.remove();
 	}
 	render() {
-		return (
-			<main>
-				<h1>Todo App</h1>
-				{this.state.loggedIn === false ?
-				<button onClick={this.login}>Log In</button>
-				:
-				<button onClick={this.logout}>Log Out</button>
-				}
-				{this.state.loggedIn === true ?
-				<div>
+		const showTodos = () => {
+			if (this.state.loggedIn === true) {
+				return (<div>
+					<button onClick={this.logout}>Log Out</button>
 					<form onSubmit={this.handleSubmit}>
 						<input name="currentTodo" value={this.state.currentTodo} onChange={this.handleChange} type="text" placeholder="Enter your todo" />
 						<input type="submit" value="Add Todo" />
@@ -88,8 +81,18 @@ class App extends React.Component {
 							</li>)	
 						})}
 					</ul>
-				</div>
-				: <p>You must be logged in to see or add todos.</p>}
+				</div>)
+			} else {
+				return (<div>
+					<button onClick={this.login}>Login</button>
+					You must be logged in to see or add todos.
+				</div>)
+			}
+		}
+		return (
+			<main>
+				<h1>Todo App</h1>
+				{showTodos()}
 			</main>
 		)
 	}
